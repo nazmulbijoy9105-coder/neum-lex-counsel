@@ -1,0 +1,6 @@
+{
+  "name": "NEUMLEX",
+  "description": "AI-Powered Legal Platform for Bangladesh Statutes Search, Precedents Citations Retrieval, and Garments Contract Risk compliance Auditing with encrypted secure document vault storage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

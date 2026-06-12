@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Default safety net (catch-all reject)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Reusable, hardened security helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // 2. Users Collection (Owner-restricted profile isolation)
+    match /users/{userId} {
+      allow get: if isSignedIn() && (isOwner(userId) || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+      allow create, update: if isSignedIn() && isOwner(userId) && incoming().role == 'user';
+      allow delete: if isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // 3. Contracts Collection (Secure RMG contract audit files)
+    match /contracts/{contractId} {
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+      
+      allow create: if isSignedIn() && isValidId(contractId) 
+        && incoming().userId == request.auth.uid
+        && incoming().name is string && incoming().name.size() <= 256
+        && incoming().complianceScore is number;
+      
+      allow update: if isSignedIn() && (existing().userId == request.auth.uid || exists(/databases/$(database)/documents/admins/$(request.auth.uid)))
+        && incoming().userId == existing().userId; // Protect from identity-poisoning transfer
+      
+      allow delete: if isSignedIn() && (existing().userId == request.auth.uid || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+    
+    // 4. Governance Compliance Logs (Immutable Audit Trail)
+    match /logs/{logId} {
+      allow create: if isSignedIn() && isValidId(logId);
+      allow get: if isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow list: if isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow update, delete: if false; // Block user tampering completely
+    }
+  }
+}

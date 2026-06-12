@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User account and metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "subscription": { "type": "string", "enum": ["free", "premium"] },
+        "planType": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "email", "role", "subscription", "planType", "createdAt"]
+    },
+    "ContractDoc": {
+      "title": "ContractDoc",
+      "description": "Sourced compliance contract audit document",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "content": { "type": "string" },
+        "complianceScore": { "type": "number" },
+        "category": { "type": "string" },
+        "bgFocusDetails": { "type": "string" },
+        "secureCode": { "type": "string" },
+        "encryptedSize": { "type": "number" },
+        "expiryDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "expiring", "expired"] },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "type", "content", "complianceScore", "secureCode", "encryptedSize", "expiryDate", "status", "userId"]
+    },
+    "GovernanceLog": {
+      "title": "GovernanceLog",
+      "description": "Logged platform compliance actions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "action": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "userEmail": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "action", "timestamp", "userEmail", "status"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Isolated profiles of registered users"
+    },
+    "contracts/{contractId}": {
+      "schema": "ContractDoc",
+      "description": "Secured RMG contract evaluation documents"
+    },
+    "logs/{logId}": {
+      "schema": "GovernanceLog",
+      "description": "Activity log files for auditing actions and modifications"
+    }
+  }
+}
